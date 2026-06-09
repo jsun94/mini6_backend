@@ -24,12 +24,9 @@ public class BookController {
 
 	@GetMapping("/{id}")
 	public ResponseEntity<Book> getBook(@PathVariable Long id) {
-		return bookService.findById(id)
-				.map(ResponseEntity::ok)
-				.orElse(ResponseEntity.notFound().build());
+		return ResponseEntity.ok(bookService.findById(id));
 	}
 
-	// Day 2: POST, PUT, DELETE 엔드포인트 구현 예정
 	// 생성
 	@PostMapping
 	public ResponseEntity<Book> createook(@Valid @RequestBody Book book) {
@@ -37,16 +34,17 @@ public class BookController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
 	}
 
+	// 수정
 	@PatchMapping("/{id}")
 	public ResponseEntity<Book> updateBook(
 			@PathVariable Long id,
 			@RequestBody Book request
 	) {
-		return bookService.update(id, request)
-				.map(ResponseEntity::ok)
-				.orElse(ResponseEntity.notFound().build());
+		Book updatedBook = bookService.update(id, request);
+		return ResponseEntity.ok(updatedBook);
 	}
 
+	// 삭제
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
 		boolean deleted = bookService.delete(id);

@@ -2,6 +2,7 @@ package com.aivle.bookapp.service;
 
 import com.aivle.bookapp.domain.Book;
 import com.aivle.bookapp.domain.Member;
+import com.aivle.bookapp.exception.BookNotFoundException;
 import com.aivle.bookapp.repository.BookRepository;
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +26,11 @@ public class BookService {
 	}
 
 	// 상세 조회
-	public Optional<Book> findById(Long id) {
-		return bookRepository.findById(id);
+	public Book findById(Long id) {
+		return bookRepository.findById(id)
+				.orElseThrow(() -> new BookNotFoundException(id));
 	}
 
-	// Day 2: create, update, delete 비즈니스 로직 구현 예정
 	// 생성
 	@Transactional
 	public Book create(Book book) {
@@ -45,24 +46,32 @@ public class BookService {
 
 	// 수정
 	@Transactional
-	public Optional<Book> update(Long id, Book request) {
-		return bookRepository.findById(id)
-				.map(book -> {
-					if (request.getTitle() != null) {
-						book.setTitle(request.getTitle());
-					}
-					if (request.getDescription() != null) {
-						book.setDescription(request.getDescription());
-					}
-					if (request.getCoverImageUrl() != null) {
-						book.setCoverImageUrl(request.getCoverImageUrl());
-					}
-					if (request.getFavorite() != null) {
-						book.setFavorite(request.getFavorite());
-					}
+	public Book update(Long id, Book request) {
+		Book book = findById(id);
 
-					return book;
-				});
+		if (request.getTitle() != null) {
+			if (request.getTitle().isBlank()) {
+				throw new IllegalArgumentException("도서 제목은 공백일 수 없습니다.");
+			}
+			book.setTitle(request.getTitle());
+		}
+
+		if (request.getDescription() != null) {
+			if (request.getDescription().isBlank()) {
+				throw new IllegalArgumentException("도서 내용은 공백일 수 없습니다.");
+			}
+			book.setDescription(request.getDescription());
+		}
+
+		if (request.getCoverImageUrl() != null) {
+			book.setCoverImageUrl(request.getCoverImageUrl());
+		}
+
+		if (request.getFavorite() != null) {
+			book.setFavorite(request.getFavorite());
+		}
+
+		return book;
 	}
 
 	// 삭제
