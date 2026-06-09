@@ -1,19 +1,11 @@
 package com.aivle.bookapp.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
 
 @Entity
 @Table(name = "books")
@@ -28,37 +20,46 @@ public class Book {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "BOOK_MEMBER_ID")
-	private Long bookMemberId;
+	// 여러 권의 책은 한 명의 사용자에게 속함
+	@JsonIgnore
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "MEMBER_NAME")
+	private Member member;
 
-	@Column(name = "BOOK_NAME", columnDefinition = "TEXT")
-	private String bookName;
+	@NotBlank(message = "도서 제목은 필수입니다.")
+	@Column(name = "BOOK_NAME", columnDefinition = "TEXT", nullable = false)
+	private String title;
 
-	@Column(name = "BOOK_DESCRIPTION", columnDefinition = "TEXT")
-	private String bookDescription;
+	@NotBlank(message = "도서 내용은 필수입니다.")
+	@Column(name = "BOOK_DESCRIPTION", columnDefinition = "TEXT", nullable = false)
+	private String description;
 
 	@Column(name = "BOOK_COVERIMAGEURL", columnDefinition = "TEXT")
-	private String bookCoverImageUrl;
+	private String coverImageUrl;
 
 	@Column(name = "BOOK_FAVORITE")
-	private Boolean bookFavorite;
+	private Boolean favorite = false;
 
 	@Column(name = "BOOK_CREATEDAT")
-	private LocalDateTime bookCreatedAt;
+	private LocalDateTime createdAt;
 
 	@Column(name = "BOOK_UPDATEDAT")
-	private LocalDateTime bookUpdatedAt;
+	private LocalDateTime updatedAt;
 
 	@PrePersist
 	void onCreate() {
 		LocalDateTime now = LocalDateTime.now();
-		bookCreatedAt = now;
-		bookUpdatedAt = now;
+		createdAt = now;
+		updatedAt = now;
+
+		if (favorite == null) {
+			favorite = false;
+		}
 	}
 
 	@PreUpdate
-	void onUpdate() {
-		bookUpdatedAt = LocalDateTime.now();
+	void onUpdate()
+	{
+		updatedAt = LocalDateTime.now();
 	}
-
 }
