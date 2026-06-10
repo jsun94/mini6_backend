@@ -18,8 +18,10 @@ public class BookController {
 	private final BookService bookService;
 
 	@GetMapping
-	public ResponseEntity<List<Book>> getAllBooks() {
-		return ResponseEntity.ok(bookService.findAll());
+	public ResponseEntity<List<Book>> getAllBooks(
+			@RequestParam(required = false) String memberName
+	) {
+		return ResponseEntity.ok(bookService.findAll(memberName));
 	}
 
 	@GetMapping("/{id}")
@@ -29,8 +31,11 @@ public class BookController {
 
 	// 생성
 	@PostMapping
-	public ResponseEntity<Book> createook(@Valid @RequestBody Book book) {
-		Book savedBook = bookService.create(book);
+	public ResponseEntity<Book> createook(
+			@RequestParam String memberName,
+			@Valid @RequestBody Book book
+	) {
+		Book savedBook = bookService.create(book, memberName);
 		return ResponseEntity.status(HttpStatus.CREATED).body(savedBook);
 	}
 

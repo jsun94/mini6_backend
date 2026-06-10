@@ -18,6 +18,8 @@ public class BookappApplication {
 			// 회원 생성
 			Member member = Member.builder()
 					.memberName("한봄")
+					.memberEmail("hanbom@test.com")
+					.memberPassword("1234")
 					.build();
 
 			memberRepository.save(member);
