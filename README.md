@@ -1,7 +1,62 @@
-# MiniProject 5 - Book App
+# AI Book Management System - Backend
 
-Spring Boot 기반 도서 관리 API 프로젝트입니다.  
-패키지명: `com.aivle.bookapp`
+Spring Boot 기반 도서 관리 REST API 서버입니다.  
+
+사용자는 회원가입 및 로그인을 통해 자신만의 서재를 관리할 수 있으며, 도서 등록·조회·수정·삭제(CRUD) 기능과 AI 표지 저장 기능을 제공합니다.
+
+---
+
+## 주요 기능
+
+### 1. 회원 관리
+#### 회원가입
+- 사용자 등록
+- 사용자명 중복 검사
+- 필수값 검증
+#### 로그인
+- 사용자 인증
+- 비밀번호 검증
+
+### 2. 도서 관리 (CRUD)
+#### 도서 등록
+- 도서 생성
+- 사용자별 도서 저장
+#### 도서 목록 조회
+- 로그인한 사용자 기준 조회
+#### 도서 상세 조회
+- 도서 단건 조회
+#### 도서 수정
+- 제목 및 내용 수정
+- 즐겨찾기 수정
+#### 도서 삭제
+- 도서 삭제
+
+### 3. AI 표지 저장
+Frontend에서 생성한 AI 표지를 저장합니다.
+#### 기능
+- Data URL 저장
+- coverImageUrl 업데이트
+- coverType 자동 변경
+#### 표지 타입
+| 값 | 설명 |
+|--------|------|
+| `NONE` | 표지 없음 |
+| `EXTERNAL` | 도서 표지 |
+| `AI` | AI 생성 표지 |
+
+---
+
+## 기술 스택
+### Backend
+- Java 17
+- Spring Boot 3
+- Spring MVC
+- Spring Data JPA
+- Lombok
+### Database
+- H2 Database
+### Build Tool
+- Gradle
 
 ---
 
@@ -21,26 +76,28 @@ TBL_MEMBER (사용자) 1 ──── N books (책)
 
 - Entity: `src/main/java/com/aivle/bookapp/domain/Member.java`
 
-### books (책)
+### BOOKS (책)
 
 | 컬럼명 | 타입 | 키 | 논리명 |
 |--------|------|-----|--------|
 | `id` | `BIGINT` | PK | (API용 JPA 자동 생성) |
-| `BOOK_MEMBER_ID` | `NUMBER` | FK | 사용자 ID |
+| `BOOK_MEMBER_NAME` | `NUMBER` | FK | 사용자 ID |
 | `BOOK_NAME` | `TEXT` | | 책 제목 |
 | `BOOK_DESCRIPTION` | `TEXT` | | 책 내용 |
 | `BOOK_COVERIMAGEURL` | `TEXT` | | 표지 |
+| `BOOK_COVERTYPE` | `TEXT` | | 표지 타입 |
 | `BOOK_FAVORITE` | `BOOLEAN` | | 즐겨찾기 |
 | `BOOK_CREATEDAT` | `TIMESTAMP` | | 생성일 |
 | `BOOK_UPDATEDAT` | `TIMESTAMP` | | 수정일 |
 
 - Entity: `src/main/java/com/aivle/bookapp/domain/Book.java`
-- `BOOK_MEMBER_ID` → `TBL_MEMBER` (1:N 관계, Day 2에서 사용자 매핑 구현 예정)
+- `BOOK_MEMBER_ID` → `TBL_MEMBER` (1:N 관계)
+- 사용자별 도서 관리 구현
 - `BOOK_CREATEDAT`, `BOOK_UPDATEDAT`는 저장·수정 시 자동 설정
 
 ---
 
-## Mission 1 & 2 — 설계 및 스켈레톤
+## Mission 1~4. 설계 및 기본 CRUD 구현
 
 ### 1. Domain
 
@@ -59,24 +116,58 @@ TBL_MEMBER (사용자) 1 ──── N books (책)
 - `MemberRepository` : `JpaRepository<Member, String>` (PK: `memberName`)
 - `BookRepository` : `JpaRepository<Book, Long>`
 
-### 3. Service — `BookService` (스켈레톤)
+### 3. Service
 
-- 위치: `src/main/java/com/aivle/bookapp/service/BookService.java`
-- 현재 구현: `findAll()`, `findById()`
-- Day 2 예정: `create`, `update`, `delete` 비즈니스 로직
+| 클래스 | 위치 | 역할 |
+|--------|------|------|
+| `MemberService` | `service/MemberService.java` | 회원가입, 로그인, 회원 조회 로직 |
+| `BookService` | `service/BookService.java` | 도서 조회, 등록, 수정, 삭제, 표지 저장 로직 |
 
-### 4. Controller — `BookController` (스켈레톤)
+#### MemberService 주요 기능
 
-- 위치: `src/main/java/com/aivle/bookapp/controller/BookController.java`
-- Base URL: `/api/books`
+- 회원가입 처리
+- 로그인 검증
+- 사용자명 기준 회원 조회
+- 중복 회원 검증
+- 비밀번호 검증
+
+#### BookService 주요 기능
+
+- 로그인 사용자 기준 도서 목록 조회
+- 도서 상세 조회
+- 도서 등록
+- 도서 부분 수정
+- 도서 삭제
+- 즐겨찾기 수정
+- AI 표지 URL 저장
+- 표지 타입 관리
+- 도서 중복 등록 검증
+- 도서 미존재 예외 처리
+
+### 4. Controller
+
+| 클래스 | 위치 | Base URL | 역할 |
+|--------|------|-------------|------|
+| `MemberController` | `controller/MemberController.java` | `/api/members` | 회원가입 및 로그인 API 제공 |
+| `BookController` | `controller/BookController.java` | `/api/books` | 도서 CRUD 및 표지 저장 API 제공 |
+
+#### Member API
 
 | Method | Path | 설명 |
 |--------|------|------|
-| `GET` | `/api/books` | 전체 도서 조회 |
-| `GET` | `/api/books/{id}` | 단건 조회 |
-| `POST` | `/api/books` | 등록 (Day 2) |
-| `PUT` | `/api/books/{id}` | 수정 (Day 2) |
-| `DELETE` | `/api/books/{id}` | 삭제 (Day 2) |
+| `POST` | `/api/members/signup` | 회원가입 |
+| `POST` | `/api/members/login` | 로그인 |
+
+#### Book API
+
+| Method | Path | 설명 |
+|--------|------|------|
+| `GET` | `/api/books?memberName={memberName}` | 로그인 사용자 기준 도서 목록 조회 |
+| `GET` | `/api/books/{id}` | 도서 상세 조회 |
+| `POST` | `/api/books?memberName={memberName}` | 도서 등록 |
+| `PATCH` | `/api/books/{id}` | 도서 부분 수정 |
+| `DELETE` | `/api/books/{id}` | 도서 삭제 |
+| `PATCH` | `/api/books/{id}/cover` | AI 표지 URL 저장 |
 
 ### 5. Integration
 
@@ -93,23 +184,175 @@ TBL_MEMBER (사용자) 1 ──── N books (책)
 
 ---
 
+## Mission 5~6. 예외 처리 및 트랜잭션 적용
+
+### 1. Exception
+| 클래스 | 위치 |
+|--------|------|
+| `BookNotFoundException` | `exception/BookNotFoundException.java` |
+| `GlobalExceptionHandler` | `exception/GlobalExceptionHandler.java` |
+
+#### BookNotFoundException
+도서 조회 및 수정/삭제 시 존재하지 않는 도서에 접근하는 경우 발생
+```
+throw new BookNotFoundException(id);
+```
+
+### 2. Transaction
+Service 계층에 트랜잭션을 적용하여 데이터 정합성을 보장하였습니다.
+
+#### 조회
+```
+@Transactional(readOnly = true)
+```
+- 전체 조회
+- 상세 조회
+
+#### 등록 / 수정 / 삭제
+```
+@Transactional
+```
+- 도서 등록
+- 도서 수정
+- 도서 삭제
+- AI 표지 저장
+
+### 3. Global Exception Handling
+모든 Controller에서 발생하는 예외를 일관된 형태로 응답하도록 구성하였습니다.
+
+| 예외 | 응답 |
+|--------|------|
+| `BookNotFoundException` | 404 Not Found |
+| `MethodArgumentNotValidException` | 400 Bad Request |
+| `IllegalArgumentException` | 400 Bad Request |
+| `Exception` | 500 Internal Server Error |
+
+---
+
+## Mission 7. AI 표지 저장 기능 구현
+
+Frontend에서 OpenAI API를 직접 호출하여 생성한 AI 표지를 Backend에 저장할 수 있도록 기능을 확장하였습니다.
+
+### 1. Book Entity 확장
+
+| 필드 | 설명 |
+|--------|------|
+| `coverImageUrl` | 표지 이미지 URL |
+| `coverType` | 표지 타입 |
+
+### 2. BookService 확장
+#### 추가 메서드
+```
+updateCover(Long id, Book request)
+```
+- AI 표지 URL 저장
+- coverType 자동 변경
+- 수정일 갱신
+
+### 3. API 추가
+
+| Method | Path | 설명 |
+|--------|------|------|
+| `PATCH` | `/api/books/{id}/cover` | AI 표지 URL 저장 |
+
+### 4. 저장 흐름
+
+```
+React
+↓
+OpenAI API 호출
+↓
+이미지 생성
+↓
+coverImageUrl 생성
+↓
+PATCH /api/books/{id}/cover
+↓
+Spring Boot
+↓
+H2 Database 저장
+```
+
+---
+
+## 추가 구현 기능
+
+### 1. 사용자별 서재 관리
+- Member Entity 생성
+- 회원가입 API
+- 로그인 API
+- Member ↔ Book (1:N) 관계 설정
+- 사용자별 도서 조회
+- 사용자별 도서 등록
+
+### 2. 도서 중복 등록 방지
+동일 사용자가 같은 제목의 도서를 중복 등록하지 못하도록 검증 로직을 추가하였습니다.
+```
+if (bookRepository.existsByTitleAndMember(book.getTitle(), member)) {
+	throw new IllegalArgumentException("이미 등록된 도서입니다.");
+}
+```
+
+### 3. AI 표지 / 도서 표지 구분
+| coverType | 표시 |
+|--------|------|
+| AI | AI 표지 |
+| EXTERNAL | 도서 표지 |
+| NONE | 표지 없음 |
+
+### 4. 베스트셀러 도서 내 서재 추가
+Frontend의 베스트셀러 페이지와 연동하여 도서를 바로 내 서재에 저장할 수 있도록 구현하였습니다.
+#### 저장 시 
+```
+베스트셀러
+↓
+내 서재에 추가
+↓
+Book 생성
+↓
+coverType = EXTERNAL
+```
+#### 이후 AI 표지 생성 시
+```
+EXTERNAL
+↓
+AI 생성
+↓
+coverType = AI
+```
+자동 변경되도록 구현하였습니다.
+
+---
+
 ## 프로젝트 구조
 
 ```
-src/main/java/com/aivle/bookapp/
-├── BookappApplication.java
-├── config/
-│   └── WebConfig.java
-├── controller/
-│   └── BookController.java
-├── domain/
-│   ├── Member.java
-│   └── Book.java
-├── repository/
-│   ├── MemberRepository.java
-│   └── BookRepository.java
-└── service/
-    └── BookService.java
+src/main/java/com/aivle/bookapp
+
+├── config
+│   └── WebConfig
+│
+├── controller
+│   ├── BookController
+│   └── MemberController
+│
+├── domain
+│   ├── Book
+│   └── Member
+│
+├── exception
+│   ├── BookNotFoundException
+│   └── GlobalExceptionHandler
+│
+├── repository
+│   ├── BookRepository
+│   └── MemberRepository
+│
+└── service
+│  └── BookService
+│  └── MemberService
+│
+└── BookappApplication
 ```
 
 ---
@@ -120,7 +363,7 @@ src/main/java/com/aivle/bookapp/
 ./gradlew bootRun
 ```
 
-H2 Console 접속 정보:
+#### H2 Console 접속 정보:
 - JDBC URL: `jdbc:h2:mem:bookdb`
 - Username: `sa`
 - Password: (비어 있음)
