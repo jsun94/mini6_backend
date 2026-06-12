@@ -367,3 +367,25 @@ src/main/java/com/aivle/bookapp
 - JDBC URL: `jdbc:h2:mem:bookdb`
 - Username: `sa`
 - Password: (비어 있음)
+
+---
+## R&R
+| 이름 / 역할 | 담당 업무 |
+| :--- | :--- |
+| **김정수** (PM) | - ERD / API 정의서<br>- README.md 작성<br>- 발표 자료 준비<br>- 통합 이슈 추적 |
+| **이지윤** (백엔드 개발) | - Book Entity 작성<br>- BookRepository<br>- H2 콘솔 확인<br>- Lombok 4종 적용 |
+| **박태희** (백엔드 개발) | - BookService 클래스<br>- 비즈니스 로직<br>- BookNotFoundException<br>- @Transactional |
+| **김민지** (백엔드 개발) | - BookController<br>- 5종 CRUD 엔드포인트<br>- @Valid + @NotBlank<br>- Postman 테스트 |
+| **장현지** (통합 / 예외 처리) | - WebConfig (CORS)<br>- GlobalExceptionHandler<br>- 풀스택 디버깅<br>- 트러블슈팅 정리 |
+| **윤준석** (AI / Frontend 연동) | - Frontend 코드 분석<br>- fetch URL 변경 / 1차 연동<br>- OpenAI 표지 흐름<br>- E2E 시연 준비 |
+
+---
+## 트러블슈팅
+| 문제 (Issue) | 원인 (Cause) | 해결 방법 (Solution) |
+| :--- | :--- | :--- |
+| **book entity 작성하면서 즐겨찾기 기능에 false가 기본값으로 넣어지지 않고 null로만 채워짐** | `@AllArgsConstructor`가 파라미터로 받은 값을 그대로 쓰기 때문에 `favorite=false` 기본값이 무시됨 | `@AllArgsConstructor` 주석 처리<br><br>*[관련 코드]*<br>`@Column(name = "BOOK_FAVORITE", columnDefinition = "BOOLEAN DEFAULT FALSE")`<br>`private Boolean favorite = false;` |
+| **React 화면이 흰 화면으로 출력됨**<br><br><img width="1054" height="125" alt="Image" src="https://github.com/user-attachments/assets/ff688845-3a37-4c8a-97ca-8d634a971142" /><br>(Uncaught TypeError: Cannot read properties of undefined) | Frontend가 기대하는 필드명과 Backend 필드명이 달랐음 | Backend 필드명을 Frontend 필드명과 통일 시킴 |
+| **백엔드 서버를 재시작했을 때, 프론트엔드 웹 화면에서 새롭게 등록하고 저장한 책 정보가 모두 사라지고 항상 초기의 샘플 데이터만 남아있는 문제** | 기존 H2 데이터베이스 설정이 `jdbc:h2:mem:bookdb`인 인메모리(In-Memory) 모드로 지정되어 있어, 서버 프로세스(내장 톰캣)가 종료되는 순간 RAM에 저장되어 있던 모든 데이터가 증발함 | `application.yml` 파일에서 `datasource.url` 경로를 인메모리 모드(`mem:`)에서 로컬 파일 저장 경로인 `jdbc:h2:file:./bookdb;AUTO_SERVER=TRUE` 모드로 전환하여 서버가 꺼져도 디스크에 데이터가 보존되게 함. |
+| **DELETE API는 정상 동작했으나 삭제 후 목록에서 즉시 사라지지 않음** | [Frontend] React State 갱신 로직에서 id 타입 불일치 발생. Backend의 id는 Number이나 Frontend에서 String으로 비교 | `setBooks(prev => prev.filter(b => b.id !== String(id)))`에서<br>`setBooks(prev => prev.filter(b => b.id !== id))`로 변경 |
+| **json-server → Spring Boot 전환 시 API 연결 실패** | 기본 Vite Proxy 설정이 json-server용으로 작성되어 있었음<br>`rewrite: (path) => path.replace(/^\/api/, '')` | 위 코드 주석 처리 |
+| **베스트셀러에서 가져온 책에 AI 표지를 새로 생성했음에도 불구하고 여전히 “도서 표지”로 표시되는 문제** | AI 표지 저장 시 `coverImageUrl`만 갱신되고, 표지 유형을 나타내는 `coverType`이 “AI”로 변경되지 않음. Frontend에서 `/cover` 전용 API 응답값을 사용하지 않고 이미지 URL 문자열만 사용하고 있었음. | Backend `updateCover()`에서 `coverType`을 “AI”로 변경하고, Frontend `generateCover()`가 `updateBookCover()`의 응답 Book 객체를 반환하도록 수정<br><br>*[관련 코드]*<br>`if (bookId) { return await updateBookCover(bookId, imageSrc) }` |
