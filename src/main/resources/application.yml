@@ -1,22 +1,23 @@
-spring:
-  application:
-    name: bookapp
-  datasource:
-    url: jdbc:h2:mem:bookdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ubuntu/app
+    overwrite: yes
 
-server:
-  port: 8080
+# ⬇️ 이 permissions 섹션을 통째로 복사해서 넣어주세요!
+permissions:
+  - object: /home/ubuntu/app
+    pattern: "**"
+    owner: ubuntu
+    group: ubuntu
+  - object: /home/ubuntu/app/scripts/deploy.sh
+    mode: 755
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  ApplicationStart:
+    - location: scripts/deploy.sh
+      timeout: 300
+      runas: ubuntu
