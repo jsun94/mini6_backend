@@ -1,0 +1,20 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto17 # 만약 자바 21을 쓰신다면 corretto21로 변경해 주세요.
+  pre_build:
+    commands:
+      - echo 빌드 준비 중...
+      - chmod +x ./gradlew # Gradle 빌드 스크립트에 실행 권한 부여
+  build:
+    commands:
+      - echo 빌드 시작...
+      - ./gradlew clean build -x test # 테스트 코드를 제외하고 깔끔하게 빌드 수행
+artifacts:
+  files:
+    - 'build/libs/*.jar'    # 빌드 결과물인 jar 파일
+    - 'appspec.yml'         # 배포 명세서 (CodeDeploy용)
+    - 'scripts/**/*'        # 배포 스크립트 파일들
+  discard-paths: no
