@@ -5,9 +5,14 @@ files:
     destination: /home/ubuntu/app
     overwrite: yes
 
+# ⬇️ 이 permissions 섹션을 통째로 복사해서 넣어주세요!
 permissions:
   - object: /home/ubuntu/app
     pattern: "**"
+    owner: ubuntu
+    group: ubuntu
+  - object: /home/ubuntu/app/scripts/deploy.sh
+    mode: 755
     owner: ubuntu
     group: ubuntu
 
